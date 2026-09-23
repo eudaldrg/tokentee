@@ -1,7 +1,7 @@
 # Roadmap
 
 Milestones from nothing to a useful public tool, each with a goal, an exit test and the design work it
-needs first. **Status: draft**, not yet reviewed. The first review pass decides the MVP cut and the order.
+needs first. **Status: draft.** Reviewed so far: M1 is the MVP (confirmed 2026-09-23). The order after M3 is not confirmed yet.
 
 Each milestone gets one design doc in `docs/design/` before any implementation plan is written. Each
 decision it forces gets an ADR in `decisions/`. GitHub issues track milestones and link here; this file
@@ -9,13 +9,17 @@ and the design docs are the source of truth.
 
 ## M0: Foundations
 
+Design status: not started.
+
 - **Goal:** a repo someone else could clone, build and test.
 - **Scope:** language/runtime, layout, CI (lint + tests), a commit hook against personal data, synthetic
   fixtures, and the `Request` record schema v0 (see architecture).
 - **Exit:** `make test` (or equivalent) is green in CI on a fixture-only codebase.
 - **Design needed:** ADR-0001 runtime and distribution, ADR-0002 record schema.
 
-## M1: Transcript report (proposed MVP)
+## M1: Transcript report (MVP)
+
+Design status: not started.
 
 - **Goal:** zero-setup answer to "how well is my prompt cache used, and what do misses cost?"
 - **Scope:** Claude Code transcript source → store → analysis (request chains, hit rate, misses split
@@ -28,6 +32,8 @@ and the design docs are the source of truth.
 
 ## M2: Recorder
 
+Design status: not started.
+
 - **Goal:** see *why* a miss happened.
 - **Scope:** a passthrough proxy for the Anthropic Messages API (streaming, unbuffered) that writes one
   record per request plus the prompt split into content-addressed blocks. Miss diagnosis: which block
@@ -39,6 +45,8 @@ and the design docs are the source of truth.
 
 ## M3: Live view and API
 
+Design status: not started.
+
 - **Goal:** watch sessions as they happen, from any screen.
 - **Scope:** a local HTTP API over the store (sessions, requests, misses, block diffs) with live
   updates, plus a minimal built-in page. The API is the contract other screens use.
@@ -48,11 +56,15 @@ and the design docs are the source of truth.
 
 ## M4: purplemux tab
 
+Design status: not started.
+
 - **Goal:** the numbers where you already look, desktop and phone.
 - **Scope:** a tab next to purplemux's stats, reading the M3 API. Lives in purplemux, not here.
 - **Design needed:** which views, how purplemux discovers the API.
 
 ## M5: Compression audit
+
+Design status: not started.
 
 - **Goal:** know whether compression in the chain pays for itself and never over-compresses.
 - **Scope:** recorder on both sides of a compressing proxy ("sandwich"), pairing the two records of one
@@ -62,6 +74,8 @@ and the design docs are the source of truth.
   cache can cost more than it saves).
 
 ## M6: Cache keep-alive
+
+Design status: not started.
 
 - **Goal:** stop paying for expiries you could have prevented cheaply.
 - **Scope:** the recorder re-sends the last request with `max_tokens: 0` just before the cache expires,

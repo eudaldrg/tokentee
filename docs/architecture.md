@@ -1,7 +1,7 @@
 # Architecture
 
 The components of tokentee, how data flows between them, and the decisions that shape them.
-**Status: draft.** Each open decision below becomes an ADR in `decisions/` once it is settled.
+**Status: draft.** The decision register below lists what is still open.
 
 ## Shape
 
@@ -45,40 +45,41 @@ breakpoints are, request and response byte counts.
 OpenTelemetry as `request_id`, and the recorder sees the header. So the same request seen by two
 sources merges instead of double-counting. This is why the key is `request_id` and not a local id.
 
-## Open decisions
+## Decision register
 
-Each one gets settled in a design session and written up as an ADR.
+Every decision that shapes tokentee, and **when** it must be settled. `Settled by` is the latest
+milestone whose design needs it. `Depends on` shows what has to come first. What can be decided now is
+what M0 needs. The rest waits, or is taken `provisional`. Format and statuses:
+`references/adr-format.md` in the eudaldrg-workflows core plugin. Most rows will end up `design doc`
+rather than ADRs.
 
-1. **Runtime and distribution** (ADR-0001, M0)
-   - *Python*: fastest for analysis, matches the author's other tooling; the proxy needs an async
-     HTTP dependency, and distribution is pipx/uv.
-   - *Go*: one static binary holding proxy + store + API + page; best at streaming proxies; analysis is
-     more verbose.
-   - *TypeScript/Node*: same language as purplemux; good at streaming; heavier to install for a CLI.
-   - Leaning: Go for a single binary that stays up as a daemon. The deciding question is whether
-     the recorder and API are the product's core (Go) or an add-on to reports (Python).
-2. **Storage** (ADR-0003, M1/M2)
-   - SQLite in WAL mode (one writer, concurrent readers, one file) is the default candidate.
-   - Prompt blocks stored once, keyed by content hash. Consecutive requests share almost all blocks,
-     so storage grows with new content, not with request count.
-   - Retention: how long bodies are kept versus numbers (numbers forever, bodies N days?).
-3. **Block segmentation** (M2): what counts as a block (tool definitions, system parts, each message
-   content block) and how `cache_control` breakpoints map onto blocks. This defines what "the block
-   that changed" means in diagnosis.
-4. **Recorder placement and routing** (M2)
-   - How the upstream is configured.
-   - Keeping Claude Code in first-party mode behind a proxy (otherwise the 1M context and tool search
-     are lost).
-   - Behaviour when upstream is down.
-5. **Security** (M2/M3)
-   - Never store auth headers.
-   - Bind to localhost only.
-   - Remote access through a tunnel (SSH/Tailscale) rather than an exposed port: an ADR before any
-     phone work.
-6. **API and live updates** (M3): REST over the store; SSE for live updates vs polling; versioned from
-   day one because purplemux depends on it.
-7. **Where the UI lives** (M3/M4): the built-in page stays minimal (a fallback and for people without
-   purplemux), and rich views live in purplemux? Or does tokentee own a full dashboard?
+| # | Question | Status | Settled by | Depends on | ADR |
+|---|---|---|---|---|---|
+| 1 | Runtime and distribution: one language or several, installed how? | open | M0 | | |
+| 2 | Record schema: which fields, and `request_id` as the join key across sources | open | M0 | 1 | |
+| 3 | Change policy for the record schema and the store (no compatibility promise before 1.0? migrations?) | open | M0 | | |
+| 4 | Storage engine and layout (SQLite in WAL mode is the candidate) | open | M1 | 1, 3 | |
+| 5 | Incremental ingest: how far each transcript was read, and rewritten or compacted files | open | M1 | 4 | |
+| 6 | Price catalogue: format, update path, unknown models | open | M1 | | |
+| 7 | Block segmentation: what a prompt block is; how `cache_control` breakpoints map onto blocks | open | M2 | 2 | |
+| 8 | Recorder placement and routing: upstream config, first-party flags, upstream down | open | M2 | 1 | |
+| 9 | Credentials and exposure: never store auth headers, localhost only | open | M2 | | |
+| 10 | Body retention: numbers kept forever, bodies for how long? | open | M2 | 4, 7 | |
+| 11 | API shape, versioning, and live updates (SSE or polling) | open | M3 | 4 | |
+| 12 | Where rich UI lives: built-in page vs purplemux | open | M3 | 11 | |
+| 13 | Request pairing across hops (sandwich mode) | open | M5 | 8 | |
+| 14 | Keep-alive policy: when to ping, budget, per-model economics | open | M6 | 8 | |
+| 15 | Remote access (phone off-LAN): tunnel vs exposed port with auth | open | later | 11 | |
+
+Options already on the table for #1:
+
+- *Python*: fastest for analysis; the proxy needs an async HTTP dependency; installed with pipx or uv.
+- *Go*: one static binary for proxy + store + API + page; strongest at streaming proxies; analysis is
+  more verbose.
+- *TypeScript*: same language as purplemux; heavier to install as a CLI.
+
+The deciding question: are the recorder and the API the core of the product (Go), or an add-on to
+reports (Python)?
 
 ## Out of scope
 
