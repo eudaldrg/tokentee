@@ -1,0 +1,9 @@
+# Real usage data never belongs in this public repo.
+*.db
+*.db-*
+*.jsonl
+!tests/fixtures/**/*.jsonl
+__pycache__/
+.venv/
+node_modules/
+dist/
